@@ -1,6 +1,8 @@
 Project (Id3LibSrc)
+Set (target id3)
 
 File (GLOB src_files *.cpp)
+File (GLOB h_files *.h)
 
 If (CMAKE_COMPILER_IS_GNUCXX)
 	Set (
@@ -9,8 +11,17 @@ If (CMAKE_COMPILER_IS_GNUCXX)
 		)
 EndIf (CMAKE_COMPILER_IS_GNUCXX)
 
-Add_Library (id3 SHARED ${src_files})
+Source_Group ("Id3 Headers" FILES ${id3_h_files})
+Source_Group ("Generated Files" ${config_h_file})
+Add_Library (${target} SHARED ${src_files} ${h_files} ${id3_h_files} ${config_h_file})
 
 Target_Link_Libraries (
-	id3 ${ZLIB_LIBRARIES}
+	${target} ${ZLIB_LIBRARY}
 	)
+
+If (WIN32)
+Set_Target_Properties (${target} PROPERTIES 
+	PREFIX lib
+	IMPORT_PREFIX lib
+	)
+EndIf (WIN32)
