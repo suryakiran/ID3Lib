@@ -75,6 +75,7 @@ Include_Directories (
 	include
 	include/id3
 	${CMAKE_CURRENT_BINARY_DIR}
+	${ZLIB_INCLUDE_DIR}
 	)
 
 Add_Definitions ("-DHAVE_CONFIG_H")
