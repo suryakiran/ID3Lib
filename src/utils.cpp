@@ -47,44 +47,48 @@
 #endif
 #endif
 
+namespace dami
+{
+	String mbstoucs(dami::String data)
+	{
+		size_t size = data.size();
+		dami::String unicode(size * 2, '\0');
+		for (size_t i = 0; i < size; ++i)
+		{
+			unicode[i*2+1] = toascii(data[i]);
+		}
+		return unicode;
+	}
+
+	// converts a Unicode string into ASCII
+	String ucstombs(dami::String data)
+	{
+		size_t size = data.size() / 2;
+		dami::String ascii(size, '\0');
+		for (size_t i = 0; i < size; ++i)
+		{
+			ascii[i] = toascii(data[i*2+1]);
+		}
+		return ascii;
+	}
+
   // converts an ASCII string into a Unicode one
-dami::String mbstoucs(dami::String data)
-{
-  size_t size = data.size();
-  dami::String unicode(size * 2, '\0');
-  for (size_t i = 0; i < size; ++i)
-  {
-    unicode[i*2+1] = toascii(data[i]);
-  }
-  return unicode;
-}
 
-// converts a Unicode string into ASCII
-dami::String ucstombs(dami::String data)
-{
-  size_t size = data.size() / 2;
-  dami::String ascii(size, '\0');
-  for (size_t i = 0; i < size; ++i)
-  {
-    ascii[i] = toascii(data[i*2+1]);
-  }
-  return ascii;
-}
-
-dami::String oldconvert(dami::String data, ID3_TextEnc sourceEnc, ID3_TextEnc targetEnc)
-{
-  dami::String target;
+	String oldconvert(dami::String data, ID3_TextEnc sourceEnc, ID3_TextEnc targetEnc)
+	{
+		String target;
 #define ID3_IS_ASCII(enc)      ((enc) == ID3TE_ASCII || (enc) == ID3TE_ISO8859_1 || (enc) == ID3TE_UTF8)
 #define ID3_IS_UNICODE(enc)    ((enc) == ID3TE_UNICODE || (enc) == ID3TE_UTF16 || (enc) == ID3TE_UTF16BE)
-  if (ID3_IS_ASCII(sourceEnc) && ID3_IS_UNICODE(targetEnc))
-  {
-    target = mbstoucs(data);
-  }
-  else if (ID3_IS_UNICODE(sourceEnc) && ID3_IS_ASCII(targetEnc))
-  {
-    target = ucstombs(data);
-  }
-  return target;
+		if (ID3_IS_ASCII(sourceEnc) && ID3_IS_UNICODE(targetEnc))
+		{
+			target = dami::mbstoucs(data);
+		}
+		else if (ID3_IS_UNICODE(sourceEnc) && ID3_IS_ASCII(targetEnc))
+		{
+			target = dami::ucstombs(data);
+		}
+		return target;
+	}
 }
 
 using namespace dami;

@@ -123,6 +123,170 @@ static int truncate(const char *path, size_t length)
 
 #endif
 
+namespace {
+
+	size_t RenderV2ToFile(const ID3_TagImpl& tag, fstream& file)
+	{
+		ID3D_NOTICE( "RenderV2ToFile: starting" );
+		if (!file)
+		{
+			ID3D_WARNING( "RenderV2ToFile: error in file" );
+			return 0;
+		}
+
+		String tagString;
+		io::StringWriter writer(tagString);
+		id3::v2::render(writer, tag);
+		ID3D_NOTICE( "RenderV2ToFile: rendered v2" );
+
+		const char* tagData = tagString.data();
+		size_t tagSize = tagString.size();
+		// if the new tag fits perfectly within the old and the old one
+		// actually existed (ie this isn't the first tag this file has had)
+		if ((!tag.GetPrependedBytes() && !ID3_GetDataSize(tag)) ||
+				(tagSize == tag.GetPrependedBytes()))
+		{
+			file.seekp(0, ios::beg);
+			file.write(tagData, tagSize);
+		}
+		else
+		{
+			String filename = tag.GetFileName();
+			String sTmpSuffix = ".XXXXXX";
+			if (filename.size() + sTmpSuffix.size() > ID3_PATH_LENGTH)
+			{
+				// log this
+				return 0;
+				//ID3_THROW_DESC(ID3E_NoFile, "filename too long");
+			}
+			char sTempFile[ID3_PATH_LENGTH];
+			strcpy(sTempFile, filename.c_str());
+			strcat(sTempFile, sTmpSuffix.c_str());
+
+#if ((defined(__GNUC__) && __GNUC__ >= 3  ) || !defined(HAVE_MKSTEMP))
+			// This section is for Windows folk && gcc 3.x folk
+			fstream tmpOut;
+			createFile(sTempFile, tmpOut);
+
+			tmpOut.write(tagData, tagSize);
+			file.seekg(tag.GetPrependedBytes(), ios::beg);
+			char *tmpBuffer[BUFSIZ];
+			while (!file.eof())
+			{
+				file.read((char *)tmpBuffer, BUFSIZ);
+				size_t nBytes = file.gcount();
+				tmpOut.write((char *)tmpBuffer, nBytes);
+			}
+
+#else //((defined(__GNUC__) && __GNUC__ >= 3  ) || !defined(HAVE_MKSTEMP))
+
+			// else we gotta make a temp file, copy the tag into it, copy the
+			// rest of the old file after the tag, delete the old file, rename
+			// this new file to the old file's name and update the handle
+
+			int fd = mkstemp(sTempFile);
+			if (fd < 0)
+			{
+				remove(sTempFile);
+				//ID3_THROW_DESC(ID3E_NoFile, "couldn't open temp file");
+			}
+
+			ofstream tmpOut(fd);
+			if (!tmpOut)
+			{
+				tmpOut.close();
+				remove(sTempFile);
+				return 0;
+				// log this
+				//ID3_THROW(ID3E_ReadOnly);
+			}
+
+			tmpOut.write(tagData, tagSize);
+			file.seekg(tag.GetPrependedBytes(), ios::beg);
+			uchar tmpBuffer[BUFSIZ];
+			while (file)
+			{
+				file.read(tmpBuffer, BUFSIZ);
+				size_t nBytes = file.gcount();
+				tmpOut.write(tmpBuffer, nBytes);
+			}
+
+			close(fd); //closes the file
+
+#endif ////((defined(__GNUC__) && __GNUC__ >= 3  ) || !defined(HAVE_MKSTEMP))
+
+			tmpOut.close();
+			file.close();
+
+			// the following sets the permissions of the new file
+			// to be the same as the original
+#if defined(HAVE_SYS_STAT_H)
+			struct stat fileStat;
+			if(stat(filename.c_str(), &fileStat) == 0)
+			{
+#endif //defined(HAVE_SYS_STAT_H)
+				remove(filename.c_str());
+				rename(sTempFile, filename.c_str());
+#if defined(HAVE_SYS_STAT_H)
+				chmod(filename.c_str(), fileStat.st_mode);
+			}
+#endif //defined(HAVE_SYS_STAT_H)
+
+			//    file = tmpOut;
+			file.clear();//to clear the eof mark
+			openWritableFile(filename, file);
+		}
+
+		return tagSize;
+	}
+
+	size_t RenderV1ToFile(ID3_TagImpl& tag, fstream& file)
+	{
+		if (!file)
+		{
+			return 0;
+		}
+
+		// Heck no, this is stupid.  If we do not read in an initial V1(.1)
+		// header then we are constantly appending new V1(.1) headers. Files
+		// can get very big that way if we never overwrite the old ones.
+		//  if (ID3_V1_LEN > tag.GetAppendedBytes())   - Daniel Hazelbaker
+		if (ID3_V1_LEN > tag.GetFileSize())
+		{
+			file.seekp(0, ios::end);
+		}
+		else
+		{
+			// We want to check if there is already an id3v1 tag, so we can write over
+			// it.  First, seek to the beginning of any possible id3v1 tag
+			file.seekg(0-ID3_V1_LEN, ios::end);
+			char sID[ID3_V1_LEN_ID];
+
+			// Read in the TAG characters
+			file.read(sID, ID3_V1_LEN_ID);
+
+			// If those three characters are TAG, then there's a preexisting id3v1 tag,
+			// so we should set the file cursor so we can overwrite it with a new tag.
+			if (memcmp(sID, "TAG", ID3_V1_LEN_ID) == 0)
+			{
+				file.seekp(0-ID3_V1_LEN, ios::end);
+			}
+			// Otherwise, set the cursor to the end of the file so we can append on
+			// the new tag.
+			else
+			{
+				file.seekp(0, ios::end);
+			}
+		}
+
+		ID3_IOStreamWriter out(file);
+
+		id3::v1::render(out, tag);
+
+		return ID3_V1_LEN;
+	}
+}
+
 size_t ID3_TagImpl::Link(const char *fileInfo, bool parseID3v1, bool parseLyrics3)
 {
   flags_t tt = ID3TT_NONE;
@@ -166,168 +330,6 @@ size_t ID3_TagImpl::Link(ID3_Reader &reader, flags_t tag_types)
 
   return this->GetPrependedBytes();
 }
-
-size_t RenderV1ToFile(ID3_TagImpl& tag, fstream& file)
-{
-  if (!file)
-  {
-    return 0;
-  }
-
-  // Heck no, this is stupid.  If we do not read in an initial V1(.1)
-  // header then we are constantly appending new V1(.1) headers. Files
-  // can get very big that way if we never overwrite the old ones.
-  //  if (ID3_V1_LEN > tag.GetAppendedBytes())   - Daniel Hazelbaker
-  if (ID3_V1_LEN > tag.GetFileSize())
-  {
-    file.seekp(0, ios::end);
-  }
-  else
-  {
-    // We want to check if there is already an id3v1 tag, so we can write over
-    // it.  First, seek to the beginning of any possible id3v1 tag
-    file.seekg(0-ID3_V1_LEN, ios::end);
-    char sID[ID3_V1_LEN_ID];
-
-    // Read in the TAG characters
-    file.read(sID, ID3_V1_LEN_ID);
-
-    // If those three characters are TAG, then there's a preexisting id3v1 tag,
-    // so we should set the file cursor so we can overwrite it with a new tag.
-    if (memcmp(sID, "TAG", ID3_V1_LEN_ID) == 0)
-    {
-      file.seekp(0-ID3_V1_LEN, ios::end);
-    }
-    // Otherwise, set the cursor to the end of the file so we can append on
-    // the new tag.
-    else
-    {
-      file.seekp(0, ios::end);
-    }
-  }
-
-  ID3_IOStreamWriter out(file);
-
-  id3::v1::render(out, tag);
-
-  return ID3_V1_LEN;
-}
-
-size_t RenderV2ToFile(const ID3_TagImpl& tag, fstream& file)
-{
-  ID3D_NOTICE( "RenderV2ToFile: starting" );
-  if (!file)
-  {
-    ID3D_WARNING( "RenderV2ToFile: error in file" );
-    return 0;
-  }
-
-  String tagString;
-  io::StringWriter writer(tagString);
-  id3::v2::render(writer, tag);
-  ID3D_NOTICE( "RenderV2ToFile: rendered v2" );
-
-  const char* tagData = tagString.data();
-  size_t tagSize = tagString.size();
-  // if the new tag fits perfectly within the old and the old one
-  // actually existed (ie this isn't the first tag this file has had)
-  if ((!tag.GetPrependedBytes() && !ID3_GetDataSize(tag)) ||
-      (tagSize == tag.GetPrependedBytes()))
-  {
-    file.seekp(0, ios::beg);
-    file.write(tagData, tagSize);
-  }
-  else
-  {
-    String filename = tag.GetFileName();
-    String sTmpSuffix = ".XXXXXX";
-    if (filename.size() + sTmpSuffix.size() > ID3_PATH_LENGTH)
-    {
-      // log this
-      return 0;
-      //ID3_THROW_DESC(ID3E_NoFile, "filename too long");
-    }
-    char sTempFile[ID3_PATH_LENGTH];
-    strcpy(sTempFile, filename.c_str());
-    strcat(sTempFile, sTmpSuffix.c_str());
-
-#if ((defined(__GNUC__) && __GNUC__ >= 3  ) || !defined(HAVE_MKSTEMP))
-    // This section is for Windows folk && gcc 3.x folk
-    fstream tmpOut;
-    createFile(sTempFile, tmpOut);
-
-    tmpOut.write(tagData, tagSize);
-    file.seekg(tag.GetPrependedBytes(), ios::beg);
-    char *tmpBuffer[BUFSIZ];
-    while (!file.eof())
-    {
-      file.read((char *)tmpBuffer, BUFSIZ);
-      size_t nBytes = file.gcount();
-      tmpOut.write((char *)tmpBuffer, nBytes);
-    }
-
-#else //((defined(__GNUC__) && __GNUC__ >= 3  ) || !defined(HAVE_MKSTEMP))
-
-    // else we gotta make a temp file, copy the tag into it, copy the
-    // rest of the old file after the tag, delete the old file, rename
-    // this new file to the old file's name and update the handle
-
-    int fd = mkstemp(sTempFile);
-    if (fd < 0)
-    {
-      remove(sTempFile);
-      //ID3_THROW_DESC(ID3E_NoFile, "couldn't open temp file");
-    }
-
-    ofstream tmpOut(fd);
-    if (!tmpOut)
-    {
-      tmpOut.close();
-      remove(sTempFile);
-      return 0;
-      // log this
-      //ID3_THROW(ID3E_ReadOnly);
-    }
-
-    tmpOut.write(tagData, tagSize);
-    file.seekg(tag.GetPrependedBytes(), ios::beg);
-    uchar tmpBuffer[BUFSIZ];
-    while (file)
-    {
-      file.read(tmpBuffer, BUFSIZ);
-      size_t nBytes = file.gcount();
-      tmpOut.write(tmpBuffer, nBytes);
-    }
-
-    close(fd); //closes the file
-
-#endif ////((defined(__GNUC__) && __GNUC__ >= 3  ) || !defined(HAVE_MKSTEMP))
-
-    tmpOut.close();
-    file.close();
-
-    // the following sets the permissions of the new file
-    // to be the same as the original
-#if defined(HAVE_SYS_STAT_H)
-    struct stat fileStat;
-    if(stat(filename.c_str(), &fileStat) == 0)
-    {
-#endif //defined(HAVE_SYS_STAT_H)
-      remove(filename.c_str());
-      rename(sTempFile, filename.c_str());
-#if defined(HAVE_SYS_STAT_H)
-      chmod(filename.c_str(), fileStat.st_mode);
-    }
-#endif //defined(HAVE_SYS_STAT_H)
-
-//    file = tmpOut;
-    file.clear();//to clear the eof mark
-    openWritableFile(filename, file);
-  }
-
-  return tagSize;
-}
-
 
 flags_t ID3_TagImpl::Update(flags_t ulTagFlag)
 {

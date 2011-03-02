@@ -34,6 +34,50 @@
 
 //using namespace dami;
 
+namespace
+{
+	ID3_Frame *ID3_GetSyncLyricsInfo(const ID3_Tag *tag, const char *desc,
+			const char *lang,
+			ID3_TimeStampFormat& format,
+			ID3_ContentType& type, size_t& size)
+	{
+		// check if a SYLT frame of this language or descriptor exists
+		ID3_Frame* frmExist = NULL;
+		if (NULL != lang)
+		{
+			// search through language
+			frmExist = tag->Find(ID3FID_SYNCEDLYRICS, ID3FN_LANGUAGE, lang);
+		}
+		else if (NULL != desc)
+		{
+			// search through descriptor
+			frmExist = tag->Find(ID3FID_SYNCEDLYRICS, ID3FN_DESCRIPTION, desc);
+		}
+		else
+		{
+			// both language and description not specified, search the first SYLT frame
+			frmExist = tag->Find(ID3FID_SYNCEDLYRICS);
+		}
+
+		if (!frmExist)
+		{
+			return NULL;
+		}
+
+		// get the lyrics time stamp format
+		format = static_cast<ID3_TimeStampFormat>(frmExist->GetField(ID3FN_TIMESTAMPFORMAT)->Get ());
+
+		// get the lyrics content type
+		type = static_cast<ID3_ContentType>(frmExist->GetField(ID3FN_CONTENTTYPE)->Get ());
+
+		// get the lyrics size
+		size = frmExist->GetField (ID3FN_DATA)->Size ();
+
+		// return the frame pointer for further uses
+		return frmExist;
+	}
+}
+
 char *ID3_GetString(const ID3_Frame *frame, ID3_FieldID fldName)
 {
   char *text = NULL;
@@ -1091,47 +1135,6 @@ ID3_Frame* ID3_AddSyncLyrics(ID3_Tag *tag, const uchar *data, size_t datasize,
   }
 
   return frame;
-}
-
-ID3_Frame *ID3_GetSyncLyricsInfo(const ID3_Tag *tag, const char *desc,
-                                 const char *lang,
-                                 ID3_TimeStampFormat& format,
-                                 ID3_ContentType& type, size_t& size)
-{
-  // check if a SYLT frame of this language or descriptor exists
-  ID3_Frame* frmExist = NULL;
-  if (NULL != lang)
-  {
-    // search through language
-    frmExist = tag->Find(ID3FID_SYNCEDLYRICS, ID3FN_LANGUAGE, lang);
-  }
-  else if (NULL != desc)
-  {
-    // search through descriptor
-    frmExist = tag->Find(ID3FID_SYNCEDLYRICS, ID3FN_DESCRIPTION, desc);
-  }
-  else
-  {
-    // both language and description not specified, search the first SYLT frame
-    frmExist = tag->Find(ID3FID_SYNCEDLYRICS);
-  }
-
-  if (!frmExist)
-  {
-    return NULL;
-  }
-
-  // get the lyrics time stamp format
-  format = static_cast<ID3_TimeStampFormat>(frmExist->GetField(ID3FN_TIMESTAMPFORMAT)->Get ());
-
-  // get the lyrics content type
-  type = static_cast<ID3_ContentType>(frmExist->GetField(ID3FN_CONTENTTYPE)->Get ());
-
-  // get the lyrics size
-  size = frmExist->GetField (ID3FN_DATA)->Size ();
-
-  // return the frame pointer for further uses
-  return frmExist;
 }
 
 ID3_Frame *ID3_GetSyncLyrics(const ID3_Tag* tag, const char* lang, 

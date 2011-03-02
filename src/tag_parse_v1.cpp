@@ -131,7 +131,7 @@ bool id3::v1::parse(ID3_TagImpl& tag, ID3_Reader& reader)
     const int paddingsize = (ID3_V1_LEN_COMMENT-2) - comment.size();
     const char * padding = "                            "; //28 spaces
 
-    if (trackno[1] == '\0' || trackno[1] == 0x20 && trackno[0] != 0x20)
+    if ((trackno[1] == '\0' || trackno[1] == 0x20) && trackno[0] != 0x20)
     {
       // if there used to be spaces they are gone now, we need to rebuild them
       comment.append(padding, paddingsize);

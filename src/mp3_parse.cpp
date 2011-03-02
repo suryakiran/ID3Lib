@@ -48,46 +48,50 @@ static int ExtractI4(unsigned char *buf)
   return x;
 }
 
-uint32 fto_nearest_i(float f)
+namespace
 {
-  uint32 i;
+	uint32 fto_nearest_i(float f)
+	{
+		uint32 i;
 
-  i = (uint32)f;
-  if (i < f)
-  {
-    f -= i;
-      if (f >= 0.5)
-      return i+1;
-    else
-      return i;
-  }
-  else
-    return i;
-}
+		i = (uint32)f;
+		if (i < f)
+		{
+			f -= i;
+			if (f >= 0.5)
+				return i+1;
+			else
+				return i;
+		}
+		else
+			return i;
+	}
 
-uint16 calcCRC(char *pFrame, size_t audiodatasize)
-{
-  size_t icounter;
-  int tmpchar, crcmask, tmpi;
-  uint16 crc = 0xffff;
+	uint16 calcCRC(char *pFrame, size_t audiodatasize)
+	{
+		size_t icounter;
+		int tmpchar, crcmask, tmpi;
+		uint16 crc = 0xffff;
 
-  for (icounter = 2;  icounter < audiodatasize;  ++icounter)
-  {
-    if (icounter != 4  &&  icounter != 5) //skip the 2 chars of the crc itself
-    {
-      crcmask = 1 << 8;
-      tmpchar = pFrame[icounter];
-      while (crcmask >>= 1)
-      {
-        tmpi = crc & 0x8000;
-        crc <<= 1;
-        if (!tmpi ^ !(tmpchar & crcmask))
-          crc ^= 0x8005;
-      }
-    }
-  }
-  crc &= 0xffff;
-  return crc;
+		for (icounter = 2;  icounter < audiodatasize;  ++icounter)
+		{
+			if (icounter != 4  &&  icounter != 5) //skip the 2 chars of the crc itself
+			{
+				crcmask = 1 << 8;
+				tmpchar = pFrame[icounter];
+				while (crcmask >>= 1)
+				{
+					tmpi = crc & 0x8000;
+					crc <<= 1;
+					if (!tmpi ^ !(tmpchar & crcmask))
+						crc ^= 0x8005;
+				}
+			}
+		}
+		crc &= 0xffff;
+		return crc;
+	}
+
 }
 
 void Mp3Info::Clean()
