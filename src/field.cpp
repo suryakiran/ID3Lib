@@ -26,8 +26,8 @@
 // http://download.sourceforge.net/id3lib/
 
 
-#include "field_impl.h"
 #include "id3/utils.h" // has <config.h> "id3/id3lib_streams.h" "id3/globals.h" "id3/id3lib_strings.h"
+#include "field_impl.h"
 #include "field_def.h"
 #include "frame_def.h"
 #include "readers.h"

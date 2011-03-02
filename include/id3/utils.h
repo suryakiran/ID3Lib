@@ -32,6 +32,10 @@
 #include <config.h>
 #endif
 
+#if HAVE_CSTRING
+#include <cstring>
+#endif
+
 #include "id3/id3lib_streams.h"
 #include "id3/globals.h" //has <stdlib.h> "id3/sized_types.h"
 #include "id3/id3lib_strings.h"

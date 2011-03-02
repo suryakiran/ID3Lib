@@ -26,6 +26,15 @@
 // http://download.sourceforge.net/id3lib/
 
 //#include "readers.h"
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef HAVE_CSTRING
+#include <cstring>
+#endif 
+
 #include "writers.h"
 #include "tag_impl.h" //has <stdio.h> "tag.h" "header_tag.h" "frame.h" "field.h" "spec.h" "id3lib_strings.h" "utils.h"
 

@@ -28,6 +28,10 @@
 #include <config.h>
 #endif
 
+#if HAVE_CSTRING
+#include <cstring>
+#endif 
+
 #include "id3/io_decorators.h" //has "readers.h" "io_helpers.h" "utils.h"
 
 using namespace dami;

@@ -28,6 +28,10 @@
 #include <config.h>
 #endif
 
+#if HAVE_CSTRING
+#include <cstring>
+#endif
+
 #include "writers.h"
 
 //using namespace dami;
