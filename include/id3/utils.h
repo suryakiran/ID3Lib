@@ -82,6 +82,10 @@ namespace dami
   }
 #endif
 
+	String mbstoucs (const String&);
+	String ucstombs (const String&);
+	String oldconvert (const String&, ID3_TextEnc, ID3_TextEnc);
+
   size_t ID3_C_EXPORT renderNumber(uchar *buffer, uint32 val, size_t size = sizeof(uint32));
   String ID3_C_EXPORT renderNumber(uint32 val, size_t size = sizeof(uint32));
 

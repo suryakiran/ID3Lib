@@ -49,7 +49,7 @@
 
 namespace dami
 {
-	String mbstoucs(dami::String data)
+	String mbstoucs(const String& data)
 	{
 		size_t size = data.size();
 		dami::String unicode(size * 2, '\0');
@@ -61,7 +61,7 @@ namespace dami
 	}
 
 	// converts a Unicode string into ASCII
-	String ucstombs(dami::String data)
+	String ucstombs(const String& data)
 	{
 		size_t size = data.size() / 2;
 		dami::String ascii(size, '\0');
@@ -74,18 +74,18 @@ namespace dami
 
   // converts an ASCII string into a Unicode one
 
-	String oldconvert(dami::String data, ID3_TextEnc sourceEnc, ID3_TextEnc targetEnc)
+	String oldconvert(const String& data, ID3_TextEnc sourceEnc, ID3_TextEnc targetEnc)
 	{
 		String target;
 #define ID3_IS_ASCII(enc)      ((enc) == ID3TE_ASCII || (enc) == ID3TE_ISO8859_1 || (enc) == ID3TE_UTF8)
 #define ID3_IS_UNICODE(enc)    ((enc) == ID3TE_UNICODE || (enc) == ID3TE_UTF16 || (enc) == ID3TE_UTF16BE)
 		if (ID3_IS_ASCII(sourceEnc) && ID3_IS_UNICODE(targetEnc))
 		{
-			target = dami::mbstoucs(data);
+			target = mbstoucs(data);
 		}
 		else if (ID3_IS_UNICODE(sourceEnc) && ID3_IS_ASCII(targetEnc))
 		{
-			target = dami::ucstombs(data);
+			target = ucstombs(data);
 		}
 		return target;
 	}
