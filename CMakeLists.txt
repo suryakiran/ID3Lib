@@ -56,10 +56,7 @@ Check_Include_File (string.h HAVE_STRING_H)
 Check_Include_File (sys/param.h HAVE_SYS_PARAM_H)
 Check_Include_File (sys/types.h HAVE_SYS_types_H)
 Check_Include_File (unistd.h HAVE_UNISTD_H)
-
-If (UNIX)
-	Check_Include_File (sys/stat.h HAVE_SYS_STAT_H)
-EndIf (UNIX)
+Check_Include_File (sys/stat.h HAVE_SYS_STAT_H)
 
 Check_Include_File (wchar.h HAVE_WCHAR_H)
 

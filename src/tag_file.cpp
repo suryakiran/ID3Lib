@@ -35,6 +35,11 @@
 #include <cstring>
 #endif
 
+#ifdef WIN32
+#include <io.h>
+#define chmod _chmod
+#endif
+
 #include "writers.h"
 #include "io_strings.h"
 #include "tag_impl.h" //has <stdio.h> "tag.h" "header_tag.h" "frame.h" "field.h" "spec.h" "id3lib_strings.h" "utils.h"
