@@ -138,8 +138,8 @@
 #endif
 
 /* Define if you have the <libcw/sys.h> header file. */
-#ifndef HAVE_LIBCW_SYS_H
-#cmakedefine HAVE_LIBCW_SYS_H @HAVE_LIBCW_SYS_H@
+#ifndef HAVE_LIBCWD_SYS_H
+#cmakedefine HAVE_LIBCWD_SYS_H @HAVE_LIBCWD_SYS_H@
 #endif
 
 /* Define if you have the <bitset> header file. */
@@ -279,12 +279,12 @@
 #define false 0
 #endif
    
-#if defined (ID3_ENABLE_DEBUG) && defined (HAVE_LIBCW_SYS_H) && defined (__cplusplus)
+#if defined (ID3_ENABLE_DEBUG) && defined (HAVE_LIBCWD_SYS_H) && defined (__cplusplus)
 
 #define DEBUG
 
-#include <libcw/sys.h>
-#include <libcw/debug.h>
+#include <libcwd/sys.h>
+#include <libcwd/debug.h>
 
 #define ID3D_INIT_DOUT()    Debug( libcw_do.on() )
 #define ID3D_INIT_WARNING() Debug( dc::warning.on() )
@@ -300,6 +300,6 @@
 #  define ID3D_NOTICE(x)
 #  define ID3D_WARNING(x)
 
-#endif /* defined (ID3_ENABLE_DEBUG) && defined (HAVE_LIBCW_SYS_H) */
+#endif /* defined (ID3_ENABLE_DEBUG) && defined (HAVE_LIBCWD_SYS_H) */
    
 

@@ -195,8 +195,8 @@
 
 #define DEBUG
 
-#include <libcw/sys.h>
-#include <libcw/debug.h>
+#include <libcwd/sys.h>
+#include <libcwd/debug.h>
 
 #define ID3D_INIT_DOUT()    Debug( libcw_do.on() )
 #define ID3D_INIT_WARNING() Debug( dc::warning.on() )

@@ -58,8 +58,18 @@ Check_Include_File (sys/param.h HAVE_SYS_PARAM_H)
 Check_Include_File (sys/types.h HAVE_SYS_types_H)
 Check_Include_File (unistd.h HAVE_UNISTD_H)
 Check_Include_File (sys/stat.h HAVE_SYS_STAT_H)
-
 Check_Include_File (wchar.h HAVE_WCHAR_H)
+
+Find_Path (LIBCWD_INCLUDE_DIR libcwd/sys.h DOC "Path to libcwd library") 
+If (LIBCWD_INCLUDE_DIR)
+	Get_Filename_Component (LIBCWD_PATH ${LIBCWD_INCLUDE_DIR} PATH CACHE)
+	Find_Library (LIBCWD_LIBRARY NAMES cwd PATHS ${LIBCWD_PATH}/lib  NO_DEFAULT_PATH)
+	Set (HAVE_LIBCWD_SYS_H 1 CACHE INTERNAL "Libcwd sys.h file presence")
+Else (LIBCWD_INCLUDE_DIR)
+	Set (HAVE_LIBCWD_SYS_H 0 CACHE INTERNAL "Libcwd sys.h file presence")
+EndIf (LIBCWD_INCLUDE_DIR)
+
+Mark_As_Advanced (LIBCWD_INCLUDE_DIR LIBCWD_LIBRARY LIBCWD_PATH)
 
 Set (ZLIB_RELEASE_NAMES z zlib1 zlib)
 Set (ZLIB_DEBUG_NAMES z zlibd1 zlibd)
@@ -124,6 +134,12 @@ Include_Directories (
 	${CMAKE_CURRENT_BINARY_DIR}
 	${ZLIB_INCLUDE_DIR}
 	)
+
+Set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DID3_ENABLE_DEBUG")
+
+If (HAVE_LIBCWD_SYS_H)
+	Set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -I${LIBCWD_INCLUDE_DIR}")
+EndIf (HAVE_LIBCWD_SYS_H)
 
 File (GLOB id3_h_files include/id3/*.h)
 

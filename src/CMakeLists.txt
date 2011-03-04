@@ -17,6 +17,7 @@ Add_Library (${target} SHARED ${src_files} ${h_files} ${id3_h_files} ${config_h_
 
 Target_Link_Libraries (
 	${target} ${ZLIB_LIBRARY}
+	debug ${LIBCWD_LIBRARY}
 	)
 
 If (WIN32)
