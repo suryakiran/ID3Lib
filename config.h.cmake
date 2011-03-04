@@ -87,6 +87,11 @@
 #cmakedefine HAVE_DLFCN_H @HAVE_DLFCN_H@
 #endif
 
+/* Define if you have the <algorithm> header file. */
+#ifndef HAVE_ALGORITHM
+#cmakedefine HAVE_ALGORITHM @HAVE_ALGORITHM@
+#endif
+
 /* Define if you have the <fstream> header file. */
 #ifndef HAVE_FSTREAM
 #cmakedefine HAVE_FSTREAM @HAVE_FSTREAM@

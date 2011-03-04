@@ -44,6 +44,7 @@ Check_Include_File_Cxx (bitset HAVE_BITSET)
 Check_Include_File_Cxx (string HAVE_STRING)
 Check_Include_File_Cxx (fstream.h HAVE_FSTREAM_H)
 Check_Include_File_Cxx (iomanip.h HAVE_IOMANIP_H)
+Check_Include_File_Cxx (algorithm HAVE_ALGORITHM)
 
 Check_Include_File (iconv.h HAVE_ICONV_H)
 Check_Include_File (dlfcn.h HAVE_DLFCN_H)
