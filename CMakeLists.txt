@@ -24,6 +24,8 @@ If (WIN32)
 EndIf (WIN32)
 
 Set (CMAKE_MODULES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+Set (ID3LIB_DOC_OUTDIR ${CMAKE_CURRENT_BINARY_DIR}/doxygen)
+Set (ID3LIB_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 Include (FindZLIB)
 Include (CheckIncludeFile)
@@ -145,3 +147,4 @@ File (GLOB id3_h_files include/id3/*.h)
 
 Add_Definitions ("-DHAVE_CONFIG_H")
 Add_Subdirectory (src)
+Add_Subdirectory (doc)
