@@ -1,3 +1,0 @@
-[submodule "CMake"]
-	path = CMake
-	url = git@github.com:suryakiran/CMakeScripts.git
